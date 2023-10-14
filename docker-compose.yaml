@@ -1,0 +1,31 @@
+services:
+  socat:
+    image: alpine/socat
+    command: tcp-listen:2375,fork,reuseaddr unix-connect:/var/run/docker.sock
+    user: root
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    expose:
+      - "2375"
+
+  bash:
+    # image: docker 
+    build:
+      context: .
+      args:
+        DOCKER_GID: ${DOCKER_GID}
+        DOCKER_ENGINE: ${DOCKER_ENGINE}
+        DOCKER_COMPOSE: ${DOCKER_COMPOSE}
+    depends_on:
+      - socat
+    environment:
+      DOCKER_HOST: tcp://socat:2375
+
+
+    # Below parameters are only for keeping the container alive for testing
+    command:
+      - sleep
+      - inf
+    init: true
